@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Banner Resizer — Freepik Expand</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f6f5f0;
+  --bg2: #edecea;
+  --surface: #ffffff;
+  --border: #e0ddd8;
+  --border2: #ccc9c2;
+  --ink: #1c1b18;
+  --ink2: #6e6b62;
+  --ink3: #a8a49a;
+  --fp: #1a56db;
+  --fp2: #3b82f6;
+  --fp-bg: #eff6ff;
+  --green: #16a34a;
+  --red: #dc2626;
+  --amber: #d97706;
+  --sh: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
+  --sh2: 0 8px 28px rgba(0,0,0,0.1);
+}
+
+body {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 44px 22px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Header ── */
+header { margin-bottom: 32px; animation: fd 0.5s ease both; }
+
+.kicker {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--fp);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kicker::before { content: ''; width: 20px; height: 1.5px; background: var(--fp); }
+
+h1 {
+  font-size: clamp(26px, 4vw, 44px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+}
+h1 em { font-style: normal; color: var(--fp); }
+
+.sub {
+  font-size: 14px;
+  color: var(--ink2);
+  max-width: 520px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+/* ── Flow strip ── */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 18px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  box-shadow: var(--sh);
+  animation: fu 0.4s ease 0.05s both;
+}
+.step { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.sn {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--ink); color: white;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Geist Mono', monospace; flex-shrink: 0;
+}
+.st { font-size: 12px; font-weight: 500; color: var(--ink2); white-space: nowrap; }
+.st strong { color: var(--ink); }
+.arr { margin: 0 10px; color: var(--border2); font-size: 13px; flex-shrink: 0; }
+
+/* ── API Card ── */
+.api-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 18px;
+  box-shadow: var(--sh);
+  animation: fu 0.4s ease 0.1s both;
+}
+.api-head {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.api-title { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.pill {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 400;
+  background: var(--ink3); color: white;
+}
+.pill.ok { background: var(--green); }
+.pill.err { background: var(--red); }
+
+.api-body { padding: 14px 18px; }
+.api-row { display: flex; gap: 10px; align-items: flex-end; }
+.field { flex: 1; }
+.field label {
+  display: block;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px; color: var(--ink3);
+  margin-bottom: 6px; letter-spacing: 0.06em;
+}
+.iw { position: relative; }
+.iw input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  padding: 9px 36px 9px 12px;
+  font-size: 13px;
+  font-family: 'Geist Mono', monospace;
+  color: var(--ink); outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.iw input:focus { border-color: var(--fp); box-shadow: 0 0 0 3px rgba(26,86,219,0.1); }
+.iw input::placeholder { color: var(--ink3); }
+.eye {
+  position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  font-size: 13px; color: var(--ink3); line-height: 1;
+}
+.btn-save {
+  background: var(--fp); color: white; border: none;
+  border-radius: 9px; padding: 9px 18px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+}
+.btn-save:hover { background: var(--fp2); transform: translateY(-1px); }
+
+.api-footer {
+  padding: 8px 18px 12px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+}
+.get-key {
+  color: var(--fp); text-decoration: none;
+  font-size: 12px; font-weight: 500;
+}
+.get-key:hover { opacity: 0.75; }
+.api-note { font-size: 11px; color: var(--ink3); }
+
+/* ── Main grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 296px;
+  gap: 16px;
+  animation: fu 0.4s ease 0.15s both;
+}
+@media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+
+/* ── Upload ── */
+.upload-box {
+  background: var(--surface);
+  border: 2px dashed var(--border2);
+  border-radius: 18px;
+  min-height: 240px;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+  box-shadow: var(--sh);
+  display: flex; align-items: center; justify-content: center;
+}
+.upload-box:hover, .upload-box.over { border-color: var(--fp); background: var(--fp-bg); }
+.upload-box.loaded { cursor: default; border-style: solid; border-color: var(--border); }
+#fi { display: none; }
+
+.upload-ph { text-align: center; padding: 28px; }
+.uicon {
+  width: 62px; height: 62px;
+  border: 1.5px solid var(--border2); border-radius: 14px;
+  background: var(--bg2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; margin: 0 auto 12px; transition: all 0.2s;
+}
+.upload-box:hover .uicon, .upload-box.over .uicon {
+  border-color: var(--fp); background: rgba(26,86,219,0.08);
+}
+.upload-ph h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.upload-ph p { font-size: 12px; color: var(--ink3); }
+
+.prev-inner { display: none; width: 100%; }
+.prev-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 13px; border-bottom: 1px solid var(--border); background: var(--bg2);
+}
+.fname {
+  font-family: 'Geist Mono', monospace; font-size: 11px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 200px; color: var(--ink2);
+}
+.btn-chg {
+  background: none; border: 1px solid var(--border2); border-radius: 6px;
+  padding: 3px 9px; font-size: 11px; color: var(--ink3); cursor: pointer;
+  transition: all 0.2s; flex-shrink: 0;
+}
+.btn-chg:hover { border-color: var(--ink); color: var(--ink); }
+.prev-img {
+  background: var(--bg2);
+  display: flex; align-items: center; justify-content: center;
+  padding: 18px; min-height: 180px;
+}
+.prev-img img {
+  max-width: 100%; max-height: 240px; object-fit: contain;
+  border-radius: 8px; box-shadow: var(--sh2);
+}
+.prev-meta {
+  display: flex; gap: 5px; padding: 9px 13px;
+  border-top: 1px solid var(--border); flex-wrap: wrap;
+}
+.chip {
+  font-family: 'Geist Mono', monospace; font-size: 10px;
+  color: var(--ink2); background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 5px; padding: 2px 8px;
+}
+
+/* ── Side ── */
+.side { display: flex; flex-direction: column; gap: 13px; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: var(--sh);
+}
+.phd {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink3);
+}
+.pbd { padding: 13px 14px; }
+
+/* Mode */
+.mtabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.mtab {
+  padding: 10px 8px;
+  border: 1.5px solid var(--border2);
+  border-radius: 9px; background: var(--bg);
+  cursor: pointer; text-align: center; transition: all 0.2s;
+}
+.mtab.on { border-color: var(--ink); background: var(--ink); color: white; }
+.mtab:hover:not(.on) { border-color: var(--ink2); }
+.mico { font-size: 17px; margin-bottom: 3px; }
+.mname { font-size: 12px; font-weight: 700; display: block; }
+.mdesc { font-size: 10px; color: var(--ink3); display: block; margin-top: 2px; }
+.mtab.on .mdesc { color: #999; }
+
+.ai-note {
+  margin-top: 10px;
+  padding: 9px 11px;
+  background: var(--fp-bg);
+  border: 1px solid rgba(26,86,219,0.15);
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--fp);
+  line-height: 1.5;
+  display: none;
+}
+
+/* Presets */
+.plist { display: flex; flex-direction: column; gap: 4px; }
+.preset {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 9px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); cursor: pointer; transition: all 0.18s;
+}
+.preset:hover { border-color: var(--fp); background: var(--fp-bg); }
+.preset.on { border-color: var(--ink); background: var(--ink); color: white; }
+
+.pchk {
+  width: 14px; height: 14px;
+  border: 1.5px solid var(--border2); border-radius: 3px;
+  font-size: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.15s;
+}
+.preset.on .pchk { background: var(--fp); border-color: var(--fp); color: white; }
+
+.pname { font-size: 12px; font-weight: 700; flex: 1; }
+.psz {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px; color: var(--ink3);
+}
+.preset.on .psz { color: #aaa; }
+
+/* Custom */
+.cf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 9px; }
+.cf label {
+  display: block;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px; color: var(--ink3);
+  margin-bottom: 5px; letter-spacing: 0.06em;
+}
+.cf input {
+  width: 100%;
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 7px; padding: 7px 9px;
+  font-size: 12px; font-family: 'Geist Mono', monospace;
+  color: var(--ink); outline: none; transition: border-color 0.2s;
+}
+.cf input:focus { border-color: var(--fp); }
+
+/* Format */
+.frow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.fo {
+  padding: 7px 5px;
+  border: 1px solid var(--border2); border-radius: 7px;
+  text-align: center;
+  font-family: 'Geist Mono', monospace; font-size: 11px;
+  cursor: pointer; color: var(--ink3); background: var(--bg);
+  transition: all 0.18s;
+}
+.fo:hover { border-color: var(--ink); color: var(--ink); }
+.fo.on { border-color: var(--ink); background: var(--ink); color: white; }
+
+/* Fallback */
+.fb-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 10px; margin-top: 4px; border-top: 1px solid var(--border);
+}
+.fb-label { font-size: 12px; color: var(--ink2); }
+.fb-label small { display: block; font-size: 10px; color: var(--ink3); margin-top: 1px; }
+.tog {
+  width: 32px; height: 18px; border-radius: 100px;
+  background: var(--border2); border: none; cursor: pointer;
+  position: relative; transition: background 0.2s; flex-shrink: 0;
+}
+.tog.on { background: var(--fp); }
+.tog::after {
+  content: ''; position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  border-radius: 50%; background: white;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.tog.on::after { transform: translateX(14px); }
+
+/* BG Color */
+.bgc-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 9px; border-top: 1px solid var(--border); margin-top: 9px;
+}
+.bgc-label { font-size: 12px; color: var(--ink2); }
+.bgc-swatches { display: flex; gap: 5px; align-items: center; }
+.swatch {
+  width: 20px; height: 20px; border-radius: 50%;
+  cursor: pointer; transition: transform 0.15s;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+.swatch:hover { transform: scale(1.15); }
+.swatch.on { border-color: var(--fp); }
+.swatch-custom {
+  width: 20px; height: 20px; border-radius: 50%;
+  cursor: pointer; border: 1.5px dashed var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--ink3);
+  overflow: hidden; flex-shrink: 0;
+}
+.swatch-custom input { opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+
+/* Run */
+.run-wrap { margin-top: 2px; }
+.prog-bar {
+  height: 3px; background: var(--border); border-radius: 100px;
+  overflow: hidden; margin-bottom: 9px; display: none;
+}
+.prog-fill {
+  height: 100%; background: var(--fp); border-radius: 100px;
+  transition: width 0.4s ease;
+}
+.prog-lbl {
+  display: flex; justify-content: space-between;
+  font-family: 'Geist Mono', monospace; font-size: 10px;
+  color: var(--ink3); margin-bottom: 7px;
+}
+.btn-run {
+  width: 100%; background: var(--ink); color: white; border: none;
+  border-radius: 11px; padding: 13px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 14px; font-weight: 800; cursor: pointer;
+  letter-spacing: -0.01em; transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+.btn-run::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(26,86,219,0.3), transparent);
+  opacity: 0; transition: opacity 0.2s;
+}
+.btn-run:hover::after { opacity: 1; }
+.btn-run:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+.btn-run:disabled { opacity: 0.38; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Results */
+#results { display: none; margin-top: 24px; animation: fu 0.4s ease; }
+.rhd { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.rtitle { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+.rcnt {
+  font-family: 'Geist Mono', monospace; font-size: 11px;
+  background: var(--ink); color: white;
+  padding: 3px 10px; border-radius: 100px;
+}
+
+.rgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 13px;
+}
+
+.rcard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 13px; overflow: hidden;
+  transition: all 0.2s; box-shadow: var(--sh);
+}
+.rcard:hover { transform: translateY(-3px); box-shadow: var(--sh2); border-color: var(--fp); }
+
+.rthumb {
+  background: var(--bg2); height: 125px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.rthumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+.rbadge {
+  position: absolute; top: 6px; left: 6px;
+  font-family: 'Geist Mono', monospace; font-size: 9px;
+  padding: 2px 7px; border-radius: 4px; letter-spacing: 0.04em;
+}
+.badge-ai { background: var(--fp); color: white; }
+.badge-std { background: var(--ink); color: white; }
+
+.rsz {
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  color: white;
+  font-family: 'Geist Mono', monospace; font-size: 9px;
+  padding: 2px 7px; border-radius: 4px;
+}
+
+.rinfo { padding: 11px; }
+.rname { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.rmeta {
+  font-family: 'Geist Mono', monospace; font-size: 10px;
+  color: var(--ink3); margin-bottom: 9px;
+}
+.btn-dl {
+  width: 100%; background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 7px; padding: 8px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 12px; font-weight: 700; color: var(--ink); cursor: pointer;
+  transition: all 0.18s;
+}
+.btn-dl:hover { background: var(--fp); color: white; border-color: var(--fp); }
+
+/* Loading card */
+.lcard {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 13px; height: 190px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 11px;
+  font-size: 11px; color: var(--ink3);
+  font-family: 'Geist Mono', monospace;
+}
+.spin {
+  width: 26px; height: 26px;
+  border: 2.5px solid var(--border2);
+  border-top-color: var(--fp);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 22px; right: 22px;
+  background: var(--ink); color: white;
+  border-radius: 10px; padding: 10px 16px;
+  font-size: 13px; font-weight: 500;
+  z-index: 9999; box-shadow: var(--sh2);
+  transform: translateY(60px); opacity: 0;
+  transition: all 0.3s ease; max-width: 260px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+@keyframes fd { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: translateY(0); } }
+@keyframes fu { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="kicker">AI Layout Resize · Freepik Image Expand</div>
+    <h1>Banner Resizer<br><em>thông minh</em></h1>
+    <p class="sub">AI tự mở rộng bố cục ảnh cho phù hợp kích thước mới — không bóp méo, không crop bừa. Powered by Freepik Expand API.</p>
+  </header>
+
+  <div class="flow">
+    <div class="step"><div class="sn">1</div><div class="st">Upload <strong>ảnh gốc</strong></div></div>
+    <div class="arr">→</div>
+    <div class="step"><div class="sn">2</div><div class="st">Tính <strong>expand</strong> mỗi hướng</div></div>
+    <div class="arr">→</div>
+    <div class="step"><div class="sn">3</div><div class="st"><strong>Freepik AI</strong> sinh phần thiếu</div></div>
+    <div class="arr">→</div>
+    <div class="step"><div class="sn">4</div><div class="st">Crop đúng <strong>kích thước</strong></div></div>
+    <div class="arr">→</div>
+    <div class="step"><div class="sn">5</div><div class="st"><strong>Tải về</strong></div></div>
+  </div>
+
+  <!-- API -->
+  <div class="api-card">
+    <div class="api-head">
+      <div class="api-title">
+        🔑 Freepik API Key
+        <span class="pill" id="apiPill">CHƯA KẾT NỐI</span>
+      </div>
+    </div>
+    <div class="api-body">
+      <div class="api-row">
+        <div class="field">
+          <label>X-FREEPIK-API-KEY</label>
+          <div class="iw">
+            <input type="password" id="apiKey" placeholder="FPSXxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+            <button class="eye" onclick="toggleEye()">👁</button>
+          </div>
+        </div>
+        <button class="btn-save" onclick="saveKey()">Lưu key</button>
+      </div>
+    </div>
+    <div class="api-footer">
+      <a class="get-key" href="https://www.freepik.com/developers/dashboard" target="_blank">→ Lấy API key tại freepik.com/developers</a>
+      <span class="api-note">Freepik Developer account · Image Expand credits</span>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="grid">
+
+    <!-- Upload -->
+    <div>
+      <div class="upload-box" id="uploadBox">
+        <input type="file" id="fi" accept="image/*">
+        <div class="upload-ph" id="uph">
+          <div class="uicon">🖼️</div>
+          <h3>Kéo thả ảnh vào đây</h3>
+          <p>hoặc click để chọn · PNG, JPG, WEBP</p>
+        </div>
+        <div class="prev-inner" id="prevInner">
+          <div class="prev-top">
+            <div class="fname" id="fname">—</div>
+            <button class="btn-chg" onclick="resetImg(event)">✕ Đổi ảnh</button>
+          </div>
+          <div class="prev-img"><img id="prevImg" src="" alt=""></div>
+          <div class="prev-meta" id="prevMeta"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Side -->
+    <div class="side">
+
+      <!-- Mode -->
+      <div class="panel">
+        <div class="phd">Chế độ resize</div>
+        <div class="pbd">
+          <div class="mtabs">
+            <div class="mtab on" id="modeAI" onclick="setMode('ai')">
+              <div class="mico">🤖</div>
+              <span class="mname">AI Expand</span>
+              <span class="mdesc">Freepik sinh bố cục</span>
+            </div>
+            <div class="mtab" id="modeStd" onclick="setMode('std')">
+              <div class="mico">🎨</div>
+              <span class="mname">Fit + Màu nền</span>
+              <span class="mdesc">Không cần API</span>
+            </div>
+          </div>
+          <div class="ai-note" id="aiNote">
+            💡 AI sẽ <strong>mở rộng bố cục</strong> sang các hướng còn thiếu, sinh nội dung phù hợp với ảnh gốc — thay vì bóp méo hoặc cắt bỏ.
+          </div>
+        </div>
+      </div>
+
+      <!-- Presets -->
+      <div class="panel">
+        <div class="phd">Kích thước xuất</div>
+        <div class="pbd">
+          <div class="plist" id="plist"></div>
+          <div class="cf-row">
+            <div class="cf">
+              <label>WIDTH (PX)</label>
+              <input type="number" id="cw" placeholder="1200">
+            </div>
+            <div class="cf">
+              <label>HEIGHT (PX)</label>
+              <input type="number" id="ch" placeholder="628">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Format + BG -->
+      <div class="panel">
+        <div class="phd">Xuất file</div>
+        <div class="pbd">
+          <div class="frow">
+            <div class="fo on" data-f="png">PNG</div>
+            <div class="fo" data-f="jpeg">JPG</div>
+            <div class="fo" data-f="webp">WEBP</div>
+          </div>
+          <!-- BG color (chỉ hiện ở Std mode) -->
+          <div id="bgcWrap" style="display:none">
+            <div class="bgc-row">
+              <span class="bgc-label">Màu nền</span>
+              <div class="bgc-swatches" id="swatches">
+                <div class="swatch on" data-c="#000000" style="background:#000" title="Đen"></div>
+                <div class="swatch" data-c="#ffffff" style="background:#fff;border:1px solid #ddd" title="Trắng"></div>
+                <div class="swatch" data-c="#1a1a2e" style="background:#1a1a2e" title="Navy"></div>
+                <div class="swatch" data-c="#f0f0f0" style="background:#f0f0f0;border:1px solid #ddd" title="Xám nhạt"></div>
+                <div class="swatch-custom" title="Tùy chọn màu">
+                  <input type="color" id="customColor" value="#000000">
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Fallback toggle (chỉ hiện ở AI mode) -->
+          <div class="fb-row" id="fbRow">
+            <div class="fb-label">
+              Fallback khi AI lỗi
+              <small>Dùng Fit + Màu nền thay thế</small>
+            </div>
+            <button class="tog on" id="fbTog"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Run -->
+      <div class="run-wrap">
+        <div class="prog-bar" id="progBar">
+          <div class="prog-fill" id="progFill" style="width:0%"></div>
+        </div>
+        <div class="prog-lbl" id="progLbl" style="display:none">
+          <span id="progTxt">Đang xử lý...</span>
+          <span id="progPct">0%</span>
+        </div>
+        <button class="btn-run" id="runBtn" disabled>Chọn ảnh để bắt đầu</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="rhd">
+      <div class="rtitle">Kết quả</div>
+      <div class="rcnt" id="rcnt">0</div>
+    </div>
+    <div class="rgrid" id="rgrid"></div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────
+let srcImg = null, srcW = 0, srcH = 0;
+let mode = 'ai';
+let fmt = 'png';
+let apiKey = '';
+let selected = new Set();
+let bgColor = '#000000';
+let fallback = true;
+
+const PRESETS = [
+  { id:'fb',  name:'Facebook Post', w:1200, h:630 },
+  { id:'ig',  name:'Instagram Sq',  w:1080, h:1080 },
+  { id:'igs', name:'IG Story',      w:1080, h:1920 },
+  { id:'yt',  name:'YouTube',       w:1280, h:720 },
+  { id:'tw',  name:'Twitter/X',     w:1600, h:900 },
+  { id:'li',  name:'LinkedIn',      w:1200, h:627 },
+];
+
+// ── Build presets ─────────────────────────────
+const pl = document.getElementById('plist');
+PRESETS.forEach(p => {
+  const el = document.createElement('div');
+  el.className = 'preset';
+  el.dataset.id = p.id;
+  el.innerHTML = `<div class="pchk">✓</div><div class="pname">${p.name}</div><div class="psz">${p.w}×${p.h}</div>`;
+  el.addEventListener('click', () => {
+    if (selected.has(p.id)) { selected.delete(p.id); el.classList.remove('on'); }
+    else { selected.add(p.id); el.classList.add('on'); }
+    document.getElementById('cw').value = '';
+    document.getElementById('ch').value = '';
+  });
+  pl.appendChild(el);
+});
+
+// ── Upload ─────────────────────────────────────
+const box = document.getElementById('uploadBox');
+const fi = document.getElementById('fi');
+
+box.addEventListener('click', e => { if (!e.target.closest('.btn-chg') && !srcImg) fi.click(); });
+box.addEventListener('dragover', e => { e.preventDefault(); box.classList.add('over'); });
+box.addEventListener('dragleave', () => box.classList.remove('over'));
+box.addEventListener('drop', e => { e.preventDefault(); box.classList.remove('over'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+fi.addEventListener('change', () => { if (fi.files[0]) loadFile(fi.files[0]); });
+
+function loadFile(file) {
+  const fr = new FileReader();
+  fr.onload = e => {
+    const i = new Image();
+    i.onload = () => {
+      srcImg = i; srcW = i.width; srcH = i.height;
+      document.getElementById('prevImg').src = e.target.result;
+      document.getElementById('fname').textContent = file.name;
+      document.getElementById('prevMeta').innerHTML =
+        `<span class="chip">${i.width}×${i.height}</span>
+         <span class="chip">${(file.size/1024).toFixed(0)} KB</span>
+         <span class="chip">${file.type.split('/')[1].toUpperCase()}</span>`;
+      document.getElementById('uph').style.display = 'none';
+      document.getElementById('prevInner').style.display = 'block';
+      box.classList.add('loaded');
+      updateBtn();
+    };
+    i.src = e.target.result;
+  };
+  fr.readAsDataURL(file);
+}
+
+function resetImg(e) {
+  e.stopPropagation();
+  srcImg = null;
+  document.getElementById('uph').style.display = 'block';
+  document.getElementById('prevInner').style.display = 'none';
+  box.classList.remove('loaded');
+  fi.value = '';
+  updateBtn();
+}
+
+// ── API key ───────────────────────────────────
+function toggleEye() {
+  const inp = document.getElementById('apiKey');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function saveKey() {
+  const v = document.getElementById('apiKey').value.trim();
+  if (!v) { toast('⚠️ Nhập API key trước!'); return; }
+  apiKey = v;
+  const pill = document.getElementById('apiPill');
+  pill.textContent = 'ĐÃ KẾT NỐI';
+  pill.className = 'pill ok';
+  toast('✅ API key đã lưu!');
+  updateBtn();
+}
+
+// ── Mode ──────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeAI').classList.toggle('on', m === 'ai');
+  document.getElementById('modeStd').classList.toggle('on', m !== 'ai');
+  document.getElementById('aiNote').style.display = m === 'ai' ? 'block' : 'none';
+  document.getElementById('bgcWrap').style.display = m === 'std' ? 'block' : 'none';
+  document.getElementById('fbRow').style.display = m === 'ai' ? 'flex' : 'none';
+  updateBtn();
+}
+
+// ── Format ────────────────────────────────────
+document.querySelectorAll('.fo').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.fo').forEach(f => f.classList.remove('on'));
+    el.classList.add('on'); fmt = el.dataset.f;
+  });
+});
+
+// ── BG Color swatches ─────────────────────────
+document.querySelectorAll('.swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('on'));
+    sw.classList.add('on');
+    bgColor = sw.dataset.c;
+  });
+});
+
+document.getElementById('customColor').addEventListener('input', function() {
+  bgColor = this.value;
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('on'));
+  this.closest('.swatch-custom').style.background = this.value;
+});
+
+// ── Fallback toggle ───────────────────────────
+document.getElementById('fbTog').addEventListener('click', function() {
+  fallback = !fallback;
+  this.classList.toggle('on', fallback);
+});
+
+// ── Update button ─────────────────────────────
+function updateBtn() {
+  const btn = document.getElementById('runBtn');
+  if (!srcImg) { btn.disabled = true; btn.textContent = 'Chọn ảnh để bắt đầu'; return; }
+  if (mode === 'ai' && !apiKey) { btn.disabled = true; btn.textContent = '🔑 Cần nhập Freepik API key'; return; }
+  btn.disabled = false;
+  btn.textContent = mode === 'ai' ? '🤖 AI Resize ngay' : '🎨 Resize ngay';
+}
+
+document.getElementById('runBtn').addEventListener('click', runAll);
+
+// ── Main ─────────────────────────────────────
+async function runAll() {
+  const sizes = getSizes();
+  if (!sizes.length) { toast('⚠️ Chọn ít nhất 1 kích thước!'); return; }
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+
+  document.getElementById('progBar').style.display = 'block';
+  document.getElementById('progLbl').style.display = 'flex';
+  document.getElementById('rgrid').innerHTML = '';
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('rcnt').textContent = '0';
+
+  let count = 0;
+
+  for (let i = 0; i < sizes.length; i++) {
+    const size = sizes[i];
+    setProgress(i / sizes.length * 100, `Đang xử lý "${size.name}"...`);
+    const card = addLoadCard(size.name);
+
+    try {
+      let dataUrl, isAI = false;
+
+      if (mode === 'ai' && apiKey) {
+        try {
+          setProgress(i / sizes.length * 100, `🤖 AI đang mở rộng bố cục "${size.name}"...`);
+          dataUrl = await aiExpand(size.w, size.h);
+          isAI = true;
+        } catch (err) {
+          console.warn('AI expand failed:', err.message);
+          if (fallback) {
+            toast(`⚠️ AI lỗi cho "${size.name}", dùng Fit + Màu nền`);
+            dataUrl = fitResize(size.w, size.h, bgColor);
+          } else {
+            throw err;
+          }
+        }
+      } else {
+        dataUrl = fitResize(size.w, size.h, bgColor);
+      }
+
+      card.remove();
+      addResultCard(size, dataUrl, isAI);
+      count++;
+      document.getElementById('rcnt').textContent = count;
+    } catch (err) {
+      card.remove();
+      toast(`❌ Lỗi: ${size.name} — ${err.message}`);
+    }
+  }
+
+  setProgress(100, '✅ Hoàn thành!');
+  setTimeout(() => {
+    document.getElementById('progBar').style.display = 'none';
+    document.getElementById('progLbl').style.display = 'none';
+    btn.disabled = false; updateBtn();
+  }, 800);
+
+  document.getElementById('results').scrollIntoView({ behavior:'smooth' });
+  toast(`🎉 Xong! ${count} ảnh đã xử lý`);
+}
+
+// ── Freepik Image Expand API ──────────────────
+async function aiExpand(targetW, targetH) {
+  // Step 1: tính expand ratio để ảnh gốc fit vào target
+  const srcRatio = srcW / srcH;
+  const tgtRatio = targetW / targetH;
+
+  let expandedW, expandedH, top = 0, bottom = 0, left = 0, right = 0;
+
+  if (srcRatio > tgtRatio) {
+    // ảnh rộng hơn → cần expand top/bottom
+    expandedW = srcW;
+    expandedH = Math.round(srcW / tgtRatio);
+    const pad = expandedH - srcH;
+    top = Math.floor(pad / 2);
+    bottom = pad - top;
+  } else {
+    // ảnh cao hơn → cần expand left/right
+    expandedH = srcH;
+    expandedW = Math.round(srcH * tgtRatio);
+    const pad = expandedW - srcW;
+    left = Math.floor(pad / 2);
+    right = pad - left;
+  }
+
+  // Giới hạn max 2048px mỗi hướng (Freepik limit)
+  if (top > 2048 || bottom > 2048 || left > 2048 || right > 2048) {
+    throw new Error('Tỷ lệ thay đổi quá lớn (>2048px). Hãy dùng Fit mode.');
+  }
+
+  // Nếu không cần expand (cùng tỷ lệ), dùng simple resize
+  if (top === 0 && bottom === 0 && left === 0 && right === 0) {
+    return fitResize(targetW, targetH, bgColor);
+  }
+
+  // Step 2: Convert ảnh gốc sang base64
+  const canvas = document.createElement('canvas');
+  canvas.width = srcW; canvas.height = srcH;
+  canvas.getContext('2d').drawImage(srcImg, 0, 0);
+  const b64 = canvas.toDataURL('image/png').split(',')[1];
+
+  // Step 3: Gọi Freepik Image Expand API
+  const body = {
+    image: b64,
+    left, right, top, bottom,
+    prompt: '' // auto-generate
+  };
+
+  const startRes = await fetch('https://api.freepik.com/v1/ai/image-expand/seedream-v4-5', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-freepik-api-key': apiKey,
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!startRes.ok) {
+    const errData = await startRes.json().catch(() => ({}));
+    throw new Error(errData.message || errData.error || `Freepik API ${startRes.status}`);
+  }
+
+  const taskData = await startRes.json();
+  const taskId = taskData.data?.task_id;
+  if (!taskId) throw new Error('Không nhận được task_id từ Freepik');
+
+  // Step 4: Poll kết quả
+  for (let attempt = 0; attempt < 60; attempt++) {
+    await sleep(3000);
+    const pollRes = await fetch(`https://api.freepik.com/v1/ai/image-expand/seedream-v4-5/${taskId}`, {
+      headers: { 'x-freepik-api-key': apiKey, 'Accept': 'application/json' }
+    });
+
+    const pollData = await pollRes.json();
+    const status = pollData.data?.status;
+
+    if (status === 'COMPLETED') {
+      const imgUrl = pollData.data?.generated?.[0];
+      if (!imgUrl) throw new Error('Không có ảnh output từ Freepik');
+
+      // Step 5: Fetch ảnh kết quả rồi resize về đúng target
+      const imgRes = await fetch(imgUrl);
+      const blob = await imgRes.blob();
+      return await resizeBlob(blob, targetW, targetH);
+    }
+
+    if (status === 'FAILED') throw new Error('Freepik task thất bại');
+  }
+
+  throw new Error('Freepik timeout sau 3 phút');
+}
+
+// ── Fit + màu nền ─────────────────────────────
+function fitResize(targetW, targetH, bg) {
+  const canvas = document.createElement('canvas');
+  canvas.width = targetW; canvas.height = targetH;
+  const ctx = canvas.getContext('2d');
+
+  // Nền màu
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, targetW, targetH);
+
+  // Fit ảnh vào giữa (giữ tỷ lệ)
+  const scale = Math.min(targetW / srcW, targetH / srcH);
+  const dw = srcW * scale;
+  const dh = srcH * scale;
+  const dx = (targetW - dw) / 2;
+  const dy = (targetH - dh) / 2;
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(srcImg, dx, dy, dw, dh);
+
+  return canvas.toDataURL(getMime(), 0.93);
+}
+
+// ── Resize blob ───────────────────────────────
+function resizeBlob(blob, w, h) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(blob);
+    const i = new Image();
+    i.onload = () => {
+      URL.revokeObjectURL(url);
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(i, 0, 0, w, h);
+      res(c.toDataURL(getMime(), 0.93));
+    };
+    i.onerror = rej;
+    i.src = url;
+  });
+}
+
+// ── Helpers ───────────────────────────────────
+function getSizes() {
+  const sizes = [];
+  selected.forEach(id => { const p = PRESETS.find(x => x.id === id); if (p) sizes.push({...p}); });
+  const cw = parseInt(document.getElementById('cw').value);
+  const ch = parseInt(document.getElementById('ch').value);
+  if (cw > 0 && ch > 0) sizes.push({ id:'custom', name:'Custom', w:cw, h:ch });
+  return sizes;
+}
+
+function getMime() {
+  return fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function setProgress(pct, txt) {
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progTxt').textContent = txt;
+  document.getElementById('progPct').textContent = Math.round(pct) + '%';
+}
+
+function addLoadCard(name) {
+  const el = document.createElement('div');
+  el.className = 'lcard';
+  el.innerHTML = `<div class="spin"></div><span>${name}</span>`;
+  document.getElementById('rgrid').appendChild(el);
+  return el;
+}
+
+function addResultCard(size, dataUrl, isAI) {
+  const ext = fmt === 'jpeg' ? 'jpg' : fmt;
+  const kb = Math.round(dataUrl.length * 0.75 / 1024);
+  const card = document.createElement('div');
+  card.className = 'rcard';
+  card.innerHTML = `
+    <div class="rthumb">
+      <img src="${dataUrl}" alt="${size.name}">
+      <div class="rbadge ${isAI ? 'badge-ai' : 'badge-std'}">${isAI ? 'AI EXPAND' : 'FIT'}</div>
+      <div class="rsz">${size.w}×${size.h}</div>
+    </div>
+    <div class="rinfo">
+      <div class="rname">${size.name}</div>
+      <div class="rmeta">${size.w}×${size.h}px · ~${kb}KB · .${ext}</div>
+      <button class="btn-dl">↓ Tải về</button>
+    </div>`;
+  card.querySelector('.btn-dl').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `${size.name.replace(/\s+/g,'-').toLowerCase()}-${size.w}x${size.h}.${ext}`;
+    a.click();
+    toast(`✅ Đã tải: ${size.name}`);
+  });
+  document.getElementById('rgrid').appendChild(card);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// Init
+setMode('ai');
+updateBtn();
+</script>
+</body>
+</html>
